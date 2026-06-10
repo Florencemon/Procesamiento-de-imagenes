@@ -214,3 +214,47 @@ ruta_salida = os.path.join(
 imagen_editada.save(ruta_salida)
 
 print(f"Imagen editada guardada como: {nombre_archivo}")
+
+# =====================================================
+# CREAR IMAGEN COMPARATIVA
+# =====================================================
+
+# Redimensionar imágenes para que tengan la misma altura
+altura_comparativa = min(imagen.height, imagen_editada.height)
+imagen_original_redimensionada = imagen.resize((int(imagen.width * altura_comparativa / imagen.height), altura_comparativa))
+imagen_editada_redimensionada = imagen_editada.resize((int(imagen_editada.width * altura_comparativa / imagen_editada.height), altura_comparativa))
+
+# Margen blanco entre las imágenes
+margen = 30
+
+# Crear imagen compuesta con espacio para texto
+espacio_texto = 100
+ancho_total = imagen_original_redimensionada.width + margen + imagen_editada_redimensionada.width
+alto_total = altura_comparativa + espacio_texto
+
+imagen_comparativa = Image.new("RGB", (ancho_total, alto_total), "white")
+
+# Pegar imágenes lado a lado con margen
+imagen_comparativa.paste(imagen_original_redimensionada, (0, 0))
+imagen_comparativa.paste(imagen_editada_redimensionada, (imagen_original_redimensionada.width + margen, 0))
+
+# Agregar texto de información
+draw_comparativa = ImageDraw.Draw(imagen_comparativa)
+try:
+    font_comparativa = ImageFont.truetype("arial.ttf", 32)
+except IOError:
+    font_comparativa = ImageFont.load_default()
+
+texto_info = f"Paleta: {nombre_paleta} | Cantidad de colores: {cantidad_colores}"
+draw_comparativa.text((10, altura_comparativa + 20), texto_info, fill="black", font=font_comparativa)
+
+# Guardar imagen comparativa
+nombre_comparativa = f"COMPARATIVA_{nombre_archivo}"
+ruta_comparativa = os.path.join(
+    "ImagenResultado",
+    nombre_comparativa
+)
+
+imagen_comparativa.save(ruta_comparativa)
+
+print(f"Imagen comparativa guardada como: {nombre_comparativa}")
