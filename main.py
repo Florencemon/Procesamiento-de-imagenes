@@ -139,4 +139,4 @@ imagen_editada.save(ruta_salida)
 
 
 
-print(f"Imagen editada guardada como: {nombre_archivo}")
+print(f"Imagen editada guardada como : {nombre_archivo}")
