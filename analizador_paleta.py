@@ -104,16 +104,42 @@ class AnalizadorPaleta:
     # 🟦 MOSTRAR PALETA VISUAL
     # =====================================================
     def obtener_paleta_visual(self):
-        # Crear una imagen en blanco
-        ancho = 100 * len(self.colores_dominantes)
-        alto = 100
+        from PIL import ImageFont
+        
+        # Crear una imagen con espacio para colores e información
+        ancho = 150 * len(self.colores_dominantes)
+        alto = 280
         paleta = Image.new("RGB", (ancho, alto), "white")
         draw = ImageDraw.Draw(paleta)
 
-        # Dibujar cada color en la paleta
+        try:
+            font_grande = ImageFont.truetype("arial.ttf", 20)
+            font_pequena = ImageFont.truetype("arial.ttf", 13)
+        except IOError:
+            font_grande = ImageFont.load_default()
+            font_pequena = ImageFont.load_default()
+
+        # Dibujar cada color con información
         for i, color in enumerate(self.colores_dominantes):
-            x0 = i * 100
-            x1 = x0 + 100
-            draw.rectangle([x0, 0, x1, alto], fill=color)
+            x0 = i * 150
+            x1 = x0 + 150
+            
+            # Rectángulo de color
+            draw.rectangle([x0 + 10, 10, x1 - 10, 120], fill=color)
+            
+            # Obtener información del color
+            color_obj = Color(color)
+            hex_color = color_obj.rgb_to_hex()
+            temperatura = color_obj.clasificar_temperatura()
+            brillo = color_obj.clasificar_brillo()
+            
+            # Dibujar información debajo
+            text_y = 130
+            draw.text((x0 + 15, text_y), hex_color, fill="black", font=font_grande)
+            draw.text((x0 + 15, text_y + 28), f"Temp: {temperatura}", fill="black", font=font_pequena)
+            draw.text((x0 + 15, text_y + 48), f"Brillo: {brillo}", fill="black", font=font_pequena)
+            
+            # Número del color
+            draw.text((x0 + 15, text_y + 68), f"Color {i+1}", fill="black", font=font_pequena)
 
         return paleta

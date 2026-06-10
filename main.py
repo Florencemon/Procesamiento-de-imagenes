@@ -2,28 +2,70 @@ from PIL import Image, ImageDraw, ImageFont
 import random
 import string
 import os
+import unicodedata
 from datetime import datetime
 
 
 from analizador_paleta import AnalizadorPaleta
 from generador_paleta import GeneradorPaletas
 from editor_imagen import EditorImagen
+from color import Color
 
 
-# Función para generar un nombre de archivo aleatorio
-# creimos que era buena idea reutilizar esa función y modificarla para que admita un nombre más descriptivo: fecha y hora
-def generar_nombre_aleatorio(prefijo="", extension="png"):
-    fecha_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
+def _normalizar_texto(texto):
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = texto.encode("ascii", "ignore").decode("ascii")
+    texto = texto.replace(" ", "_")
+
+    return "".join(
+        ch for ch in texto
+        if ch.isalnum() or ch in "-_"
+    )
+
+
+def generar_nombre_archivo(nombre_paleta="", cantidad_colores="", nombre_original="", prefijo="", extension="png"):
+    """Genera nombre con formato: [prefijo-]Paleta_NcoloresNombre_original.ext"""
+    partes = []
 
     if prefijo:
-        return f"{prefijo}_{fecha_hora}.{extension}"
+        partes.append(_normalizar_texto(prefijo))
 
-    return f"{fecha_hora}.{extension}"
+    if nombre_paleta:
+        partes.append(_normalizar_texto(nombre_paleta))
+
+    if cantidad_colores:
+        partes.append(f"{cantidad_colores}colores")
+
+    if nombre_original:
+        nombre_base = os.path.splitext(
+            os.path.basename(nombre_original)
+        )[0]
+        partes.append(_normalizar_texto(nombre_base))
+
+    return f"{'_'.join(partes)}.{extension}"
 
 
 # Pedir datos al usuario
-image_path = input("Ingrese la ruta de la imagen: ")
-cantidad_colores = int(input("¿Cuántos colores desea extraer?: "))
+image_path = None
+while not image_path:
+    ruta = input("Ingrese la ruta de la imagen: ").strip()
+    if os.path.isfile(ruta):
+        image_path = ruta
+    else:
+        print(f"ERROR!!! El archivo '{ruta}' no existe. Intente de nuevo.")
+
+cantidad_colores = None
+while not cantidad_colores:
+    try:
+        valor = int(input("¿Cuántos colores desea extraer?: "))
+        if valor <= 0:
+            print("ERROR!!! Debe ingresar un número mayor a 0.")
+        elif valor > 8:
+            print("ERROR!!! El máximo de colores es 8.")
+        else:
+            cantidad_colores = valor
+    except ValueError:
+        print("ERROR!!! Ingrese un número válido.")
 
 # =====================================================
 # ANALIZAR IMAGEN
@@ -43,7 +85,13 @@ analizador.mostrar_resultados()
 '''nombre_archivo = generar_nombre_aleatorio()
 analizador.obtener_paleta_visual().save(nombre_archivo)'''
 
-nombre_archivo = generar_nombre_aleatorio()
+extension_original = os.path.splitext(image_path)[1].lstrip('.') or 'png'
+nombre_archivo = generar_nombre_archivo(
+    prefijo="PaletaOriginal",
+    nombre_original=image_path,
+    cantidad_colores=cantidad_colores,
+    extension=extension_original
+)
 
 ruta_salida = os.path.join(
     "PaletaOriginal",
@@ -51,8 +99,6 @@ ruta_salida = os.path.join(
 )
 
 analizador.obtener_paleta_visual().save(ruta_salida)
-
-
 
 print(f"Paleta original guardada como: {nombre_archivo}")
 
@@ -66,25 +112,49 @@ paletas = generador.generar_paletas()
 
 for nombre, lista_colores in paletas.items():
 
-    ancho = 100 * len(lista_colores["colores"])
-    alto = 150
+    ancho = 150 * len(lista_colores["colores"])
+    alto = 280
 
     paleta = Image.new("RGB", (ancho, alto), "white")
     draw = ImageDraw.Draw(paleta)
 
     try:
-        font = ImageFont.truetype("arial.ttf", 20)
+        font_grande = ImageFont.truetype("arial.ttf", 20)
+        font_pequena = ImageFont.truetype("arial.ttf", 13)
     except IOError:
-        font = ImageFont.load_default()
+        font_grande = ImageFont.load_default()
+        font_pequena = ImageFont.load_default()
 
-    draw.text((10, 10), nombre, fill="black", font=font)
+    # Dibujar título con la paleta
+    draw.text((10, 10), nombre, fill="black", font=font_grande)
 
     for i, color in enumerate(lista_colores["colores"]):
-        x0 = i * 100
-        x1 = x0 + 100
-        draw.rectangle([x0, 50, x1, 150], fill=color)
+        x0 = i * 150
+        x1 = x0 + 150
+        
+        # Rectángulo de color
+        draw.rectangle([x0 + 10, 50, x1 - 10, 160], fill=color)
+        
+        # Obtener información del color
+        color_obj = Color(color)
+        hex_color = color_obj.rgb_to_hex()
+        temperatura = color_obj.clasificar_temperatura()
+        brillo = color_obj.clasificar_brillo()
+        
+        # Dibujar información debajo
+        text_y = 170
+        draw.text((x0 + 15, text_y), hex_color, fill="black", font=font_grande)
+        draw.text((x0 + 15, text_y + 28), f"Temp: {temperatura}", fill="black", font=font_pequena)
+        draw.text((x0 + 15, text_y + 48), f"Brillo: {brillo}", fill="black", font=font_pequena)
 
-    nombre_archivo = generar_nombre_aleatorio()
+    extension_original = os.path.splitext(image_path)[1].lstrip('.') or 'png'
+    nombre_archivo = generar_nombre_archivo(
+        prefijo="PaletaGuardada",
+        nombre_paleta=nombre,
+        cantidad_colores=cantidad_colores,
+        nombre_original=image_path,
+        extension=extension_original
+    )
 
     ruta_salida = os.path.join(
         "PaletasGuardadas",
@@ -128,7 +198,13 @@ imagen_editada = editor.aplicar_paleta(
     nuevos_colores
 )
 
-nombre_archivo = generar_nombre_aleatorio()
+extension_original = os.path.splitext(image_path)[1].lstrip('.') or 'png'
+nombre_archivo = generar_nombre_archivo(
+    nombre_paleta=nombre_paleta,
+    cantidad_colores=cantidad_colores,
+    nombre_original=image_path,
+    extension=extension_original
+)
 
 ruta_salida = os.path.join(
     "ImagenResultado",
@@ -137,6 +213,4 @@ ruta_salida = os.path.join(
 
 imagen_editada.save(ruta_salida)
 
-
-
-print(f"Imagen editada guardada como : {nombre_archivo}")
+print(f"Imagen editada guardada como: {nombre_archivo}")
