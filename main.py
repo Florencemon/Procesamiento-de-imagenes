@@ -98,9 +98,25 @@ ruta_salida = os.path.join(
     nombre_archivo
 )
 
-analizador.obtener_paleta_visual().save(ruta_salida)
+os.makedirs("PaletaOriginal", exist_ok=True)
 
+# Guardar la paleta visual como antes (no reemplazar)
+analizador.obtener_paleta_visual().save(ruta_salida)
 print(f"Paleta original guardada como: {nombre_archivo}")
+
+# Además guardar la imagen original con recuadros de color (archivo distinto)
+nombre_archivo_img = generar_nombre_archivo(
+    prefijo="PaletaOriginalFoto",
+    nombre_original=image_path,
+    cantidad_colores=cantidad_colores,
+    extension=extension_original
+)
+ruta_salida_img = os.path.join(
+    "PaletaOriginal",
+    nombre_archivo_img
+)
+analizador.obtener_paleta_original().save(ruta_salida_img)
+print(f"Imagen original con recuadros guardada como: {nombre_archivo_img}")
 
 # =====================================================
 # GENERAR PALETAS
