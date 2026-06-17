@@ -102,9 +102,17 @@ class PaletaApp:
         generador = GeneradorPaletas(self.colores)
         self.paletas = generador.generar_paletas()
 
+        # Obtener dimensiones de la imagen original para limitar el tamaño de la paleta.
+        img_original = Image.open(self.image_path)
+        ancho_max = img_original.width if img_original.width > 400 else 800
+
         for nombre, lista_colores in self.paletas.items():
-            ancho = 150 * len(lista_colores["colores"])
+            num_colores = len(lista_colores["colores"])
+            # Calcular el ancho de cada color de forma que la paleta no exceda el ancho máximo.
+            ancho_por_color = max(80, min(150, ancho_max // num_colores))
+            ancho = ancho_por_color * num_colores
             alto = 280
+
             paleta = Image.new("RGB", (ancho, alto), "white")
             draw = ImageDraw.Draw(paleta)
 
@@ -118,8 +126,8 @@ class PaletaApp:
             draw.text((10, 10), nombre, fill="black", font=font_grande)
 
             for i, color in enumerate(lista_colores["colores"]):
-                x0 = i * 150
-                x1 = x0 + 150
+                x0 = i * ancho_por_color
+                x1 = x0 + ancho_por_color
                 draw.rectangle([x0 + 10, 50, x1 - 10, 160], fill=color)
 
                 color_obj = Color(color)
