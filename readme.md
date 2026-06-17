@@ -1,3 +1,13 @@
+## Integrantes:
+- Castaño Alma
+- Castelao Bravo María del Mar
+- Chirino Florencia
+
+## Materia: Procesamiento digital de Imágenes
+## Profesor: Juan Ignacio Bonini  
+## IFTS 18
+### JUNIO 2026
+
 # Procesador de Paletas de Color
 
 Esta aplicación extrae los colores dominantes de una imagen y genera varias paletas alternativas.
