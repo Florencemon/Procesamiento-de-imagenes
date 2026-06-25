@@ -1,6 +1,5 @@
 import io
 import unicodedata
-
 import streamlit as st
 from PIL import Image
 
@@ -10,7 +9,7 @@ from editor_imagen import EditorImagen
 from color import Color
 
 # ──────────────────────────────────────────────
-# Helpers
+# Ayudantes
 # ──────────────────────────────────────────────
 
 def normalizar_texto(texto: str) -> str:
@@ -89,7 +88,7 @@ def crear_comparativa(original: Image.Image, editada: Image.Image) -> Image.Imag
 
 
 # ──────────────────────────────────────────────
-# UI
+# Interfaz de usuario
 # ──────────────────────────────────────────────
 
 st.set_page_config(

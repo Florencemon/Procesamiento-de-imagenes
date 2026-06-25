@@ -28,7 +28,8 @@ También guarda versiones visuales de la paleta original y una imagen comparativ
 
 ## Estructura principal
 
-- `main.py`: lanzador principal que ejecuta la aplicación.
+- `main.py`: lanzador principal que ejecuta la aplicación en consola.
+- `app_streamlit.py`: interfaz web interactiva con Streamlit.
 - `paleta_app.py`: clase principal que coordina el flujo de trabajo.
 - `analizador_paleta.py`: carga la imagen y extrae colores dominantes.
 - `generador_paleta.py`: crea paletas alternativas basadas en tonos.
@@ -44,6 +45,22 @@ pip install -r requirements.txt
 ```
 
 ## Uso
+
+### Opción 1: Interfaz web (Streamlit) - Recomendado
+
+```bash
+streamlit run app_streamlit.py
+```
+
+Esta interfaz proporciona una experiencia visual completa:
+
+- Subir imagen mediante interfaz gráfica
+- Ajustar parámetros en tiempo real (cantidad de colores, brillo, saturación, tamaño)
+- Vista previa inmediata de resultados
+- Comparativa lado a lado entre imagen original y editada
+- Descargar resultados (imagen procesada, comparativa, paleta visual)
+
+### Opción 2: Script de consola
 
 Ejecutar el script principal:
 
@@ -62,5 +79,30 @@ Los resultados se guardan en las carpetas:
 - `PaletaOriginal/`
 - `PaletasGuardadas/`
 - `ImagenResultado/`
+
+## Características de la interfaz Streamlit
+
+### Panel de configuración (Sidebar)
+
+**Extracción de colores:**
+- Controles para seleccionar cantidad de colores (1-8)
+- Botones para analizar imagen y limpiar resultados
+
+**Paleta alternativa:**
+- Opciones de paleta: Complementaria, Análoga o Triádica
+
+**Ajustes de imagen:**
+- **Brillo**: de 0.1 (muy oscuro) a 3.0 (muy claro)
+- **Saturación**: de 0 (escala de grises) a 3.0 (altamente saturado)
+- **Tamaño**: de 10% a 200% del tamaño original
+
+### Visualización de resultados
+
+- Imagen original + paleta dominante
+- Colores extraídos con información de HEX, temperatura y brillo
+- Paleta alternativa seleccionada
+- Imagen procesada con todos los ajustes aplicados
+- Comparativa visual original vs. procesada
+- Descarga de resultados en formato PNG
 
 
