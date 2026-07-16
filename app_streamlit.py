@@ -33,11 +33,8 @@ def pil_a_bytes(imagen: Image.Image, fmt: str = "PNG") -> bytes:
 def analizar(img_bytes: bytes, n_colores: int):
     """Extrae colores dominantes. Cacheado para no recalcular en cada interacción."""
     imagen = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    analizador = AnalizadorPaleta.__new__(AnalizadorPaleta)
-    analizador.ruta_imagen = None
-    analizador.n_colores = n_colores
-    analizador.imagen = imagen
-    analizador.colores_dominantes = []
+    analizador = AnalizadorPaleta(n_colores=n_colores)
+    analizador.cargar_imagen_desde_pil(imagen)
     colores = analizador.extraer_colores()
     paleta_visual = analizador.obtener_paleta_visual()
     paleta_sobre_imagen = analizador.obtener_paleta_original()
@@ -87,9 +84,9 @@ def crear_comparativa(original: Image.Image, editada: Image.Image) -> Image.Imag
     return comp
 
 
-# ──────────────────────────────────────────────
+
 # Interfaz de usuario
-# ──────────────────────────────────────────────
+
 
 st.set_page_config(
     page_title="Paletas de Color",
@@ -181,9 +178,9 @@ if st.session_state.colores is not None:
         st.image(img_bytes, caption="Imagen subida", use_container_width=True)
     with col_paleta:
         st.image(st.session_state.paleta_visual,
-                 caption="Paleta de colores dominantes", use_container_width=True)
+                caption="Paleta de colores dominantes", use_container_width=True)
         st.image(st.session_state.paleta_original,
-                 caption="Paleta sobre imagen original", use_container_width=True)
+                caption="Paleta sobre imagen original", use_container_width=True)
 
     # — Swatches de colores extraídos —
     st.subheader("Colores extraídos")
@@ -250,7 +247,7 @@ if st.session_state.colores is not None:
         st.caption(f"Dimensiones: {ancho_px} × {alto_px} px")
     with col_comp:
         st.image(comparativa, caption="Comparativa original vs. procesada",
-                 use_container_width=True)
+                use_container_width=True)
 
     # — Descargas —
     st.subheader("Descargar resultados")

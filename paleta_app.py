@@ -6,7 +6,8 @@ from PIL import Image, ImageDraw, ImageFont
 from analizador_paleta import AnalizadorPaleta
 from generador_paleta import GeneradorPaletas
 from editor_imagen import EditorImagen
-from color import Color
+from paleta_exportador import PaletaExportador
+from paleta_visualizador import PaletaVisualizador
 
 
 class PaletaApp:
@@ -21,6 +22,8 @@ class PaletaApp:
         self.imagen_editada = None
         self.extension_original = "png"
         self.nombre_archivo = ""
+        self.exportador = None
+        self.visualizador = PaletaVisualizador()
 
     def ejecutar(self):
         """Ejecuta el flujo completo de la aplicación."""
@@ -63,9 +66,10 @@ class PaletaApp:
 
     def _analizar_imagen(self):
         """Carga la imagen, extrae los colores dominantes y guarda los resultados iniciales."""
+        self.exportador = PaletaExportador("PaletaOriginal")
         self.analizador = AnalizadorPaleta(
-            self.image_path,
-            n_colores=self.cantidad_colores
+            ruta_imagen=self.image_path,
+            n_colores=self.cantidad_colores,
         )
         self.analizador.cargar_imagen()
         self.colores = self.analizador.extraer_colores()
@@ -74,17 +78,17 @@ class PaletaApp:
         self._guardar_paleta_originales()
 
     def _guardar_paleta_originales(self):
-        os.makedirs("PaletaOriginal", exist_ok=True)
-
         nombre_archivo = self._generar_nombre_archivo(
             prefijo="PaletaOriginal",
             nombre_original=self.image_path,
             cantidad_colores=self.cantidad_colores,
             extension=self.extension_original
         )
-        ruta_salida = os.path.join("PaletaOriginal", nombre_archivo)
-        self.analizador.obtener_paleta_visual().save(ruta_salida)
-        print(f"Paleta original guardada como: {nombre_archivo}")
+        ruta_salida = self.exportador.guardar(
+            self.visualizador.crear_paleta_visual(self.colores),
+            nombre_archivo
+        )
+        print(f"Paleta original guardada como: {os.path.basename(ruta_salida)}")
 
         nombre_archivo_img = self._generar_nombre_archivo(
             prefijo="PaletaOriginalFoto",
@@ -92,53 +96,25 @@ class PaletaApp:
             cantidad_colores=self.cantidad_colores,
             extension=self.extension_original
         )
-        ruta_salida_img = os.path.join("PaletaOriginal", nombre_archivo_img)
-        self.analizador.obtener_paleta_original().save(ruta_salida_img)
-        print(f"Imagen original con recuadros guardada como: {nombre_archivo_img}")
+        ruta_salida_img = self.exportador.guardar(
+            self.visualizador.crear_paleta_original(Image.open(self.image_path), self.colores),
+            nombre_archivo_img
+        )
+        print(f"Imagen original con recuadros guardada como: {os.path.basename(ruta_salida_img)}")
 
     def _generar_y_guardar_paletas(self):
         """Genera todas las paletas alternativas y las guarda en disco."""
-        os.makedirs("PaletasGuardadas", exist_ok=True)
+        exportador_guardadas = PaletaExportador("PaletasGuardadas")
         generador = GeneradorPaletas(self.colores)
         self.paletas = generador.generar_paletas()
 
-        # Obtener dimensiones de la imagen original para limitar el tamaño de la paleta.
         img_original = Image.open(self.image_path)
         ancho_max = img_original.width if img_original.width > 400 else 800
 
         for nombre, lista_colores in self.paletas.items():
             num_colores = len(lista_colores["colores"])
-            # Calcular el ancho de cada color de forma que la paleta no exceda el ancho máximo.
             ancho_por_color = max(80, min(150, ancho_max // num_colores))
-            ancho = ancho_por_color * num_colores
-            alto = 280
-
-            paleta = Image.new("RGB", (ancho, alto), "white")
-            draw = ImageDraw.Draw(paleta)
-
-            try:
-                font_grande = ImageFont.truetype("arial.ttf", 20)
-                font_pequena = ImageFont.truetype("arial.ttf", 13)
-            except IOError:
-                font_grande = ImageFont.load_default()
-                font_pequena = ImageFont.load_default()
-
-            draw.text((10, 10), nombre, fill="black", font=font_grande)
-
-            for i, color in enumerate(lista_colores["colores"]):
-                x0 = i * ancho_por_color
-                x1 = x0 + ancho_por_color
-                draw.rectangle([x0 + 10, 50, x1 - 10, 160], fill=color)
-
-                color_obj = Color(color)
-                hex_color = color_obj.rgb_to_hex()
-                temperatura = color_obj.clasificar_temperatura()
-                brillo = color_obj.clasificar_brillo()
-
-                text_y = 170
-                draw.text((x0 + 15, text_y), hex_color, fill="black", font=font_grande)
-                draw.text((x0 + 15, text_y + 28), f"Temp: {temperatura}", fill="black", font=font_pequena)
-                draw.text((x0 + 15, text_y + 48), f"Brillo: {brillo}", fill="black", font=font_pequena)
+            paleta = self.visualizador.crear_paleta_visual(lista_colores["colores"], ancho_por_color=ancho_por_color)
 
             nombre_archivo = self._generar_nombre_archivo(
                 prefijo="PaletaGuardada",
@@ -147,9 +123,8 @@ class PaletaApp:
                 nombre_original=self.image_path,
                 extension=self.extension_original
             )
-            ruta_salida = os.path.join("PaletasGuardadas", nombre_archivo)
-            paleta.save(ruta_salida)
-            print(f"Paleta guardada como: {nombre_archivo}")
+            ruta_salida = exportador_guardadas.guardar(paleta, nombre_archivo)
+            print(f"Paleta guardada como: {os.path.basename(ruta_salida)}")
 
     def _aplicar_paleta_seleccionada(self):
         """Aplica la paleta elegida por el usuario sobre la imagen original."""
@@ -170,10 +145,9 @@ class PaletaApp:
             extension=self.extension_original
         )
 
-        os.makedirs("ImagenResultado", exist_ok=True)
-        ruta_salida = os.path.join("ImagenResultado", self.nombre_archivo)
-        self.imagen_editada.save(ruta_salida)
-        print(f"Imagen editada guardada como: {self.nombre_archivo}")
+        exportador_resultado = PaletaExportador("ImagenResultado")
+        ruta_salida = exportador_resultado.guardar(self.imagen_editada, self.nombre_archivo)
+        print(f"Imagen editada guardada como: {os.path.basename(ruta_salida)}")
 
     def _seleccionar_paleta(self):
         """Muestra el menú de selección de paleta y devuelve el nombre elegido."""
@@ -199,6 +173,12 @@ class PaletaApp:
             return
 
         imagen_original = Image.open(self.image_path)
+        imagenes_redimensionadas = self._redimensionar_imagenes_comparativa(imagen_original)
+        imagen_comparativa = self._crear_canvas_comparativo(imagenes_redimensionadas)
+        self._agregar_texto_comparativa(imagen_comparativa, imagenes_redimensionadas[0].height)
+        self._guardar_comparativa(imagen_comparativa)
+
+    def _redimensionar_imagenes_comparativa(self, imagen_original):
         altura_comparativa = min(imagen_original.height, self.imagen_editada.height)
         imagen_original_redimensionada = imagen_original.resize(
             (int(imagen_original.width * altura_comparativa / imagen_original.height), altura_comparativa)
@@ -206,25 +186,33 @@ class PaletaApp:
         imagen_editada_redimensionada = self.imagen_editada.resize(
             (int(self.imagen_editada.width * altura_comparativa / self.imagen_editada.height), altura_comparativa)
         )
+        return imagen_original_redimensionada, imagen_editada_redimensionada
 
+    def _crear_canvas_comparativo(self, imagenes_redimensionadas):
+        imagen_original_redimensionada, imagen_editada_redimensionada = imagenes_redimensionadas
         margen = 30
         espacio_texto = 100
         ancho_total = imagen_original_redimensionada.width + margen + imagen_editada_redimensionada.width
-        alto_total = altura_comparativa + espacio_texto
+        alto_total = imagen_original_redimensionada.height + espacio_texto
 
         imagen_comparativa = Image.new("RGB", (ancho_total, alto_total), "white")
         imagen_comparativa.paste(imagen_original_redimensionada, (0, 0))
         imagen_comparativa.paste(imagen_editada_redimensionada, (imagen_original_redimensionada.width + margen, 0))
+        return imagen_comparativa
 
+    def _agregar_texto_comparativa(self, imagen_comparativa, altura_imagen):
         draw_comparativa = ImageDraw.Draw(imagen_comparativa)
-        try:
-            font_comparativa = ImageFont.truetype("arial.ttf", 32)
-        except IOError:
-            font_comparativa = ImageFont.load_default()
-
+        font_comparativa = self._obtener_fuente_comparativa()
         texto_info = f"Paleta: {self.nombre_archivo.split('_')[0]} | Cantidad de colores: {self.cantidad_colores}"
-        draw_comparativa.text((10, altura_comparativa + 20), texto_info, fill="black", font=font_comparativa)
+        draw_comparativa.text((10, altura_imagen + 20), texto_info, fill="black", font=font_comparativa)
 
+    def _obtener_fuente_comparativa(self):
+        try:
+            return ImageFont.truetype("arial.ttf", 32)
+        except IOError:
+            return ImageFont.load_default()
+
+    def _guardar_comparativa(self, imagen_comparativa):
         nombre_comparativa = f"COMPARATIVA_{self.nombre_archivo}"
         ruta_comparativa = os.path.join("ImagenResultado", nombre_comparativa)
         imagen_comparativa.save(ruta_comparativa)

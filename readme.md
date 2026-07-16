@@ -80,6 +80,15 @@ Los resultados se guardan en las carpetas:
 - `PaletasGuardadas/`
 - `ImagenResultado/`
 
+## Refactorización y arquitectura
+
+El módulo de análisis fue reorganizado para reducir el acoplamiento y facilitar la reutilización del código:
+
+- El constructor ya no obliga a recibir una ruta de imagen al instanciar la clase.
+- Se incorporaron métodos explícitos como `cargar_imagen()` y `cargar_imagen_desde_pil()` para reutilizar la misma instancia con imágenes nuevas.
+- La lógica de extracción de colores y de dibujo de paletas quedó separada en métodos más pequeños y con responsabilidades claras.
+- El flujo sigue siendo compatible con la consola y con la interfaz Streamlit.
+
 ## Características de la interfaz Streamlit
 
 ### Panel de configuración (Sidebar)
