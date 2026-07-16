@@ -30,7 +30,7 @@ También guarda versiones visuales de la paleta original y una imagen comparativ
 
 - `main.py`: lanzador principal que ejecuta la aplicación en consola.
 - `app_streamlit.py`: interfaz web interactiva con Streamlit.
-- `paleta_app.py`: clase principal que coordina el flujo de trabajo.
+- `app_paleta.py`: clase principal que coordina el flujo de trabajo.
 - `analizador_paleta.py`: carga la imagen y extrae colores dominantes.
 - `generador_paleta.py`: crea paletas alternativas basadas en tonos.
 - `editor_imagen.py`: aplica los nuevos colores a la imagen.

@@ -1,4 +1,4 @@
-from paleta_app import PaletaApp
+from app_paleta import PaletaApp
 
 
 if __name__ == "__main__":

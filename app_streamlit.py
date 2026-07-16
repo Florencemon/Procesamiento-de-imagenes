@@ -90,7 +90,7 @@ def crear_comparativa(original: Image.Image, editada: Image.Image) -> Image.Imag
 
 st.set_page_config(
     page_title="Paletas de Color",
-    page_icon="🌈",
+    page_icon="https://img.icons8.com/doodle/48/picture.png",
     layout="wide",
 )
 
