@@ -93,6 +93,15 @@ El módulo de análisis fue reorganizado para reducir el acoplamiento y facilita
 - La lógica de extracción de colores y de dibujo de paletas quedó separada en métodos más pequeños y con responsabilidades claras.
 - El flujo sigue siendo compatible con la consola y con la interfaz Streamlit.
 
+### Puntos de mejora aplicados
+
+- Reducción del acoplamiento en el constructor: la instancia ya no queda atada a una sola ruta de imagen.
+- Refactorización de métodos largos en helpers más pequeños, cada uno con una responsabilidad específica.
+- Delegación de lógica mediante métodos descriptivos como `_calcular_total_altura`, `_calcular_margen` y `_preparar_layout`.
+- Separación de responsabilidades a nivel de clases mediante `PaletaVisualizador` y `PaletaExportador`.
+- Mayor reutilización del código, con un motor de procesamiento independiente de la interfaz.
+- Actualización de la documentación y agregados de pruebas automáticas para validar los cambios.
+
 ## Características de la interfaz Streamlit
 
 ### Panel de configuración (Sidebar)
