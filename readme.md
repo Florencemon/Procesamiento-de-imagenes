@@ -1,3 +1,7 @@
+<img width="2103" height="748" alt="image" src="https://github.com/user-attachments/assets/a062672c-c746-4bc2-8914-b1fae6ae29db" />
+
+
+
 ## Integrantes:
 - Castaño Alma
 - Castelao Bravo María del Mar
